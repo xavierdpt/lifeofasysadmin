@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Render the story collection into a static site for GitHub Pages.
 
-The technical titles come from stories.db; the story title and the prose come from
-stories/{id}.md. Reading order is the numeric id. The two titles stay separate: the
-index shows the story title as the link and the technical title as its subtitle.
+The requested topic and the theme come from stories.db; the story title and the prose
+come from stories/{id}.md. Reading order is the numeric id. Topic and title stay
+separate: the index shows the story title as the link, and the topic followed by the
+theme as its subtitle.
 """
 
 import argparse
@@ -105,6 +106,8 @@ ol.stories a:hover { text-decoration: underline; }
   font-size: .8rem;
   color: var(--muted);
 }
+.slug .theme { color: var(--accent); }
+.slug .theme::before { content: " \u00b7 "; color: var(--muted); }
 pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 code { background: var(--code-bg); padding: .1em .35em; border-radius: 3px; font-size: .85em; }
 pre {
@@ -153,6 +156,14 @@ def strip_title(text):
     return re.sub(r"\A\s*#\s+.*\n", "", text, count=1)
 
 
+def subtitle(topic, theme):
+    """The index and story subtitle: the requested topic, then the theme it was written under."""
+    out = html.escape(topic)
+    if theme:
+        out += ' <span class="theme">%s</span>' % html.escape(theme)
+    return out
+
+
 def render(title, body, root, footer):
     return PAGE % {
         "title": html.escape(title),
@@ -169,7 +180,9 @@ def main():
     args = parser.parse_args()
 
     conn = sqlite3.connect(DB_PATH)
-    rows = conn.execute("SELECT id, title FROM stories ORDER BY CAST(id AS INTEGER)").fetchall()
+    rows = conn.execute(
+        "SELECT id, topic, theme FROM stories ORDER BY CAST(id AS INTEGER)"
+    ).fetchall()
     conn.close()
 
     out = args.out
@@ -181,30 +194,30 @@ def main():
 
     entries = []
     missing = []
-    for story_id, technical_title in rows:
+    for story_id, topic, theme in rows:
         path = os.path.join(STORIES_DIR, story_id + ".md")
         if not os.path.exists(path):
             missing.append(story_id)
             continue
         with open(path, encoding="utf-8") as f:
             text = f.read()
-        title = story_title(text, technical_title)
+        title = story_title(text, topic)
         md.reset()
         body = md.convert(strip_title(text))
         page = "<article>\n<h1>%s</h1>\n<p class=\"slug\">%s</p>\n%s\n</article>\n" % (
             html.escape(title),
-            html.escape(technical_title),
+            subtitle(topic, theme),
             body,
         )
         page += '<p class="nav"><a href="../index.html">&larr; All stories</a></p>\n'
         with open(os.path.join(out, "stories", story_id + ".html"), "w", encoding="utf-8") as f:
             f.write(render(title, page, "../", "Built from stories/%s.md" % story_id))
-        entries.append((story_id, technical_title, title))
+        entries.append((story_id, topic, theme, title))
 
     items = "\n".join(
         '  <li><a href="stories/%s.html">%s</a><span class="slug">%s</span></li>'
-        % (html.escape(story_id), html.escape(title), html.escape(technical_title))
-        for story_id, technical_title, title in entries
+        % (html.escape(story_id), html.escape(title), subtitle(topic, theme))
+        for story_id, topic, theme, title in entries
     )
     index = (
         "<h1>%s</h1>\n<p class=\"tagline\">%s</p>\n<ol class=\"stories\">\n%s\n</ol>\n"

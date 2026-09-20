@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Manage the story collection: sqlite index (id, technical title) + stories/{id}.md.
+"""Manage the story collection: sqlite index (id, topic, theme) + stories/{id}.md.
 
-Ids are plain numbers ("1", "2", ...), assigned sequentially. Technical titles name
-the topic, e.g. "curl --basic".
+Ids are plain numbers ("1", "2", ...), assigned sequentially. The requested topic
+verbatim names the topic, e.g. "curl --basic"; the theme is the palette entry the
+story was written under, e.g. "Migration".
 """
 
 import argparse
@@ -28,10 +29,14 @@ def init_db(conn):
         """
         CREATE TABLE IF NOT EXISTS stories (
             id    TEXT PRIMARY KEY,
-            title TEXT NOT NULL
+            topic TEXT NOT NULL,
+            theme TEXT NOT NULL DEFAULT ''
         )
         """
     )
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(stories)")}
+    if "theme" not in columns:
+        conn.execute("ALTER TABLE stories ADD COLUMN theme TEXT NOT NULL DEFAULT ''")
     conn.commit()
 
 
@@ -69,7 +74,7 @@ def cmd_add(args):
     os.makedirs(STORIES_DIR, exist_ok=True)
     conn = connect()
     init_db(conn)
-    story_title = args.story_title or args.technical_title
+    story_title = args.story_title or args.topic
     story_id = check_id(args.id) if args.id else next_id(conn)
     if conn.execute("SELECT 1 FROM stories WHERE id = ?", (story_id,)).fetchone():
         sys.exit("error: id already exists: %s" % story_id)
@@ -77,12 +82,15 @@ def cmd_add(args):
     if os.path.exists(path):
         sys.exit("error: file already exists: %s" % path)
     conn.execute(
-        "INSERT INTO stories (id, title) VALUES (?, ?)", (story_id, args.technical_title)
+        "INSERT INTO stories (id, topic, theme) VALUES (?, ?, ?)",
+        (story_id, args.topic, args.theme or ""),
     )
     conn.commit()
     conn.close()
     with open(path, "w") as f:
         f.write("# %s\n\n" % story_title)
+        if args.theme:
+            f.write("*Theme: %s*\n\n" % args.theme)
     print(story_id)
     print(path)
     if args.edit:
@@ -92,24 +100,37 @@ def cmd_add(args):
 def cmd_list(args):
     conn = connect()
     init_db(conn)
-    rows = conn.execute("SELECT id, title FROM stories ORDER BY CAST(id AS INTEGER)").fetchall()
+    rows = conn.execute(
+        "SELECT id, topic, theme FROM stories ORDER BY CAST(id AS INTEGER)"
+    ).fetchall()
     conn.close()
-    for story_id, title in rows:
+    for story_id, topic, theme in rows:
         mark = "" if os.path.exists(story_path(story_id)) else "  [MISSING FILE]"
-        print("%-6s %s%s" % (story_id, title, mark))
+        print("%-6s %-32s %s%s" % (story_id, topic, theme or "-", mark))
 
 
 def cmd_retitle(args):
     conn = connect()
     init_db(conn)
     cur = conn.execute(
-        "UPDATE stories SET title = ? WHERE id = ?", (args.technical_title, args.id)
+        "UPDATE stories SET topic = ? WHERE id = ?", (args.topic, args.id)
     )
     conn.commit()
     conn.close()
     if cur.rowcount == 0:
         sys.exit("error: no such story: %s" % args.id)
-    print("%s -> %s" % (args.id, args.technical_title))
+    print("%s -> %s" % (args.id, args.topic))
+
+
+def cmd_retheme(args):
+    conn = connect()
+    init_db(conn)
+    cur = conn.execute("UPDATE stories SET theme = ? WHERE id = ?", (args.theme, args.id))
+    conn.commit()
+    conn.close()
+    if cur.rowcount == 0:
+        sys.exit("error: no such story: %s" % args.id)
+    print("%s -> %s" % (args.id, args.theme))
 
 
 def cmd_rename(args):
@@ -179,9 +200,12 @@ def main():
     )
 
     p = sub.add_parser("add", help="add a new story")
-    p.add_argument("technical_title", help='topic title stored in the database, e.g. "curl --basic"')
+    p.add_argument("topic", help='requested topic verbatim, stored in the database, e.g. "curl --basic"')
     p.add_argument(
         "-s", "--story-title", help="descriptive title written as the H1 of the .md file"
+    )
+    p.add_argument(
+        "-t", "--theme", help='the palette theme the story is written under, e.g. "Migration"'
     )
     p.add_argument("--id", help="explicit numeric id (default: next unused number)")
     p.add_argument("-e", "--edit", action="store_true", help="open $EDITOR afterwards")
@@ -190,10 +214,15 @@ def main():
     p = sub.add_parser("list", help="list stories ordered by id")
     p.set_defaults(func=cmd_list)
 
-    p = sub.add_parser("retitle", help="change a story's technical title")
+    p = sub.add_parser("retitle", help="change a story's requested topic verbatim")
     p.add_argument("id")
-    p.add_argument("technical_title")
+    p.add_argument("topic")
     p.set_defaults(func=cmd_retitle)
+
+    p = sub.add_parser("retheme", help="change the theme recorded for a story")
+    p.add_argument("id")
+    p.add_argument("theme")
+    p.set_defaults(func=cmd_retheme)
 
     p = sub.add_parser("rename", help="change a story's numeric id (moves its file too)")
     p.add_argument("id")

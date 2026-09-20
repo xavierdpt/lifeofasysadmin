@@ -5,68 +5,81 @@ A collection of illustrative scenario stories about the life of a system adminis
 ## Structure
 
 ```
-stories.db          sqlite index: one row per story (numeric id, technical title)
-stories/{id}.md     the story content, one file per story (1.md, 2.md, … — do not read)
-scripts/story.py    CLI to create and maintain stories
-src/                upstream package sources, for fact-checking stories (read-only)
-aux/                off-limits — do not read, modify, or reference
+stories.db             sqlite index: one row per story (numeric id, requested topic
+                       verbatim, theme)
+stories/{id}.md        the story content, one file per story (1.md, 2.md, … — do not read)
+scripts/story.py       CLI to create and maintain stories
+scripts/build_site.py  renders the collection into the GitHub Pages site
+src/                   upstream package sources, for fact-checking stories (read-only)
+aux/                   off-limits — do not read, modify, or reference
 ```
 
-### The two titles
+### The topic, the title and the theme
 
-Each story has **two** titles, and they are deliberately different:
+Each story has a **requested topic** and a **story title**, and they are deliberately
+different:
 
-- **Technical title** — the `title` column in `stories.db`. It names the *topic* the
-  story is about, in the form the topic is actually written: `curl --basic`,
-  `curl --aws-sigv4`. This is the title `list` shows, and the site renders it as the
+- **Requested topic verbatim** — the `topic` column in `stories.db`. It names the
+  *topic* the story is about, in the form the topic is actually written: `curl --basic`,
+  `curl --aws-sigv4`. This is what `list` shows, and the site renders it as the
   subtitle under each entry in the index.
 - **Story title** — the `# ` heading at the top of `stories/{id}.md`. Descriptive and
-  written for a reader (e.g. `The Backup Nobody Had Ever Restored`).
+  written for a reader.
 
 They are not expected to match. Never "fix" one to match the other.
 
+Alongside them, the **theme** — the palette entry the story was written under, e.g.
+`Migration` — is recorded in the `theme` column and named in the story itself. The
+site prints it after the topic in the subtitle, on the index and on the story page.
+
 The `id` is the link between them and is also the filename stem. It is a plain number
 — `1`, `2`, `3` — carrying no meaning beyond identity and reading order. Because the
-content lives in a file named after the id, either title can be rewritten without
+content lives in a file named after the id, either one can be rewritten without
 touching the other.
 
 ### Database schema
 
 ```sql
 CREATE TABLE stories (
-    id    TEXT PRIMARY KEY, -- a plain number, as text: "1", "2", ...
-    title TEXT NOT NULL      -- technical title: the topic, e.g. "curl --basic"
+    id    TEXT PRIMARY KEY,          -- a plain number, as text: "1", "2", ...
+    topic TEXT NOT NULL,             -- requested topic verbatim, e.g. "curl --basic"
+    theme TEXT NOT NULL DEFAULT ''   -- the palette theme, e.g. "Migration"
 );
 ```
 
-There is no `sqlite3` CLI on this machine; use `scripts/story.py` (Python `sqlite3`)
-for all database access.
+The `sqlite3` CLI is available (3.45.1) and is fine for ad-hoc queries against
+`stories.db`. Make changes through `scripts/story.py`, though, so the index and the
+files in `stories/` never drift apart.
 
 ## Commands
 
 ```bash
 python3 scripts/story.py init                        # create stories.db and stories/
 python3 scripts/story.py add "curl --cert" \
-    -s "The Certificate That Expired on a Sunday"    # new row + stories/{id}.md stub
+    -s "<story title>" -t "<theme>"                  # new row + stories/{id}.md stub
 python3 scripts/story.py list                        # all stories, in reading order
-python3 scripts/story.py retitle <id> "<new technical title>"
+python3 scripts/story.py retitle <id> "<new requested topic verbatim>"
+python3 scripts/story.py retheme <id> "<theme>"
 python3 scripts/story.py rename <id> <new-id>        # renumbers the row and the .md file
 python3 scripts/story.py remove <id>                 # drops the row, keeps the file
 python3 scripts/story.py check                       # index and files agree?
+python3 scripts/build_site.py -o _site               # render the site locally
 ```
 
 `add` assigns the next unused number as the id; pass `--id` to set it explicitly, and
 `-e` to open `$EDITOR` on the new file. Without `-s`, the story title defaults to the
-technical title.
+requested topic verbatim. `-t` records the theme and writes it into the stub.
 
 ## Conventions
 
 - Ids are plain numbers (`1`, `2`, …) and the files are `stories/1.md`, `stories/2.md`,
   … — no slugs, no prefixes. The numeric id is also the reading order, so a story added
   later reads last unless it is renumbered with `rename`.
-- The technical title names the topic as it is written, e.g. `curl --basic`. It is not a
-  sort key and takes no numeric prefix.
-- Each `stories/{id}.md` begins with a single `# ` heading — the story title.
+- The requested topic verbatim names the topic as it is written, e.g. `curl --basic`.
+  It is not a sort key and takes no numeric prefix.
+- Each `stories/{id}.md` begins with a single `# ` heading — the story title, followed
+  by a `*Theme: <theme>*` line naming the theme the story was written under. The same
+  theme goes in the `theme` column, spelled as the palette spells it.
 - Add stories with `scripts/story.py add` rather than creating files by hand, so the
   index and the files never drift apart. Run `check` if in doubt.
 
@@ -78,9 +91,9 @@ which themes are taken, not "just the first few lines", and not as a side effect
 wildcard like `cat stories/*.md`. This holds even when writing a new story, which is
 exactly when the temptation is strongest.
 
-Everything you need to write a story is in this file: the two-title rule, the `# `
-heading, the "show it in use and say why it was built that way" requirement, and the
-themes palette. If something about the expected shape of a story is unclear, ask —
+Everything you need to write a story is in this file: the topic-and-title rule, the
+`# ` heading and `*Theme:*` line, the "show the feature in use and say why it exists"
+requirement, and the themes palette. If something about the expected shape of a story is unclear, ask —
 do not go and look at a neighbouring story to infer it.
 
 The reason is voice. Stories written by someone who has just read the previous one
@@ -93,23 +106,31 @@ when the collection is read end to end.
 Two narrow exceptions, both of which are bookkeeping rather than reading:
 
 - `scripts/story.py list` and `scripts/story.py check` are always fine. They report
-  ids and technical titles, never content.
+  ids, requested topics verbatim and themes, never content.
 - If the user explicitly asks you to read, edit, review or compare a specific story in
   that moment, do it. The instruction is about reaching for them unprompted.
 
-To choose a technical title, and to see which ids are taken, use `list`. To propose
-themes, use the palette below and the titles `list` gives you — not the story text.
+To choose a requested topic verbatim, and to see which ids are taken, use `list`. To
+propose themes, use the palette below and the topics `list` gives you — not the story
+text.
 
-### Show the thing in use, and answer "why was it built that way"
+### Show the feature in use, and say why it exists
 
-A story that only shows *what* broke reads like a bug report. Somewhere before the
-diagnosis, say why the thing being debugged was set up the way it was: who chose it,
-what they were buying, and what the choice cost them later.
+The story exists to teach the topic. By the end the reader should know two things
+about it: **what problem it solves** — why the feature was added at all, what was
+painful or impossible without it — and **what it does**, concretely enough to use it.
 
-The story must also put the thing to work. Show a concrete scenario in which someone
-actually uses it — the command they run, the config they write, the situation that
-called for it — not just an explanation of what it does. The reader should come away
-knowing both what it is for and what using it looks like.
+Both come from an applied example, not from exposition. Show someone reaching for the
+feature in a situation that actually calls for it: the command they type, the config
+they write, the output they get back, and what they do with it. A paragraph explaining
+the feature is not a substitute for a scene in which it earns its place. The reason it
+exists is best shown by what the scene would look like without it — the workaround, the
+manual step, the thing that silently went wrong before.
+
+"Why does this exist" is a question about the feature, not about the local setup. Who
+chose this host, this vendor or this directory layout is background at most; the
+question the story answers is why the option, flag, protocol or policy was built and
+what it is for.
 
 That, alongside the theme the user picked from the palette below, is the whole
 requirement.
@@ -119,11 +140,8 @@ dialogue, some a single aside in the middle of the diagnosis. Work out each time
 what that story needs, rather than reaching for the same structure or the same
 vocabulary as the last one.
 
-It applies to whatever the story leans on: a non-obvious option, flag, protocol,
-topology or policy. If the reader would ask "why was it like that?", answer it.
-
-Ground the answer the same way as the rest of the story: the man page, the
-changelog, the source in `src/`. The motivation is as checkable as the error
+Ground the motivation the same way as the rest of the story: the man page, the
+changelog, the source in `src/`. Why a feature exists is as checkable as an error
 message, and inventing a plausible-sounding rationale is the same error as
 inventing a plausible-sounding flag.
 
@@ -137,7 +155,7 @@ from so the stories stay varied instead of all being "prod broke at 3am".
 The division of labour is fixed: **the user supplies the topic, you supply the
 themes.**
 
-The topic the user names *is* the technical title — record it as given (`curl
+The topic the user names *is* the requested topic verbatim — record it as given (`curl
 --basic`), do not reword, expand or prettify it, and do not invent a topic of your
 own.
 
@@ -149,7 +167,9 @@ three genuinely different from each other rather than three shades of "it broke"
 varying the angle (first day versus tenth year, who caused it versus who found it) is
 a legitimate way to make them differ.
 
-Write only after the user picks one.
+Write only after the user picks one. Record the theme they picked with `add -t` (or
+`retheme`), and name it in the story's `*Theme:*` line, so the site can show it next
+to the topic.
 
 ### Incident and failure
 
