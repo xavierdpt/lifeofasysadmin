@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Manage the story collection: sqlite index (id, technical title) + stories/{id}.md."""
+"""Manage the story collection: sqlite index (id, technical title) + stories/{id}.md.
+
+Ids are plain numbers ("1", "2", ...), assigned sequentially. Technical titles name
+the topic, e.g. "curl --basic".
+"""
 
 import argparse
 import os
@@ -35,19 +39,22 @@ def story_path(story_id):
     return os.path.join(STORIES_DIR, story_id + ".md")
 
 
-def slugify(text):
-    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return slug or "story"
+ID_RE = re.compile(r"^[1-9][0-9]*$")
 
 
-def unique_id(conn, base):
-    candidate, n = base, 2
-    while True:
-        row = conn.execute("SELECT 1 FROM stories WHERE id = ?", (candidate,)).fetchone()
-        if row is None and not os.path.exists(story_path(candidate)):
-            return candidate
-        candidate = "%s-%d" % (base, n)
-        n += 1
+def check_id(story_id):
+    if not ID_RE.match(story_id):
+        sys.exit("error: ids must be plain numbers (1, 2, ...): %s" % story_id)
+    return story_id
+
+
+def next_id(conn):
+    """One past the highest id in the index or on disk, so ids never get reused."""
+    used = {row[0] for row in conn.execute("SELECT id FROM stories")}
+    if os.path.isdir(STORIES_DIR):
+        used |= {n[:-3] for n in os.listdir(STORIES_DIR) if n.endswith(".md")}
+    numbers = [int(u) for u in used if ID_RE.match(u)]
+    return str(max(numbers) + 1 if numbers else 1)
 
 
 def cmd_init(args):
@@ -63,7 +70,7 @@ def cmd_add(args):
     conn = connect()
     init_db(conn)
     story_title = args.story_title or args.technical_title
-    story_id = args.id or unique_id(conn, slugify(args.technical_title))
+    story_id = check_id(args.id) if args.id else next_id(conn)
     if conn.execute("SELECT 1 FROM stories WHERE id = ?", (story_id,)).fetchone():
         sys.exit("error: id already exists: %s" % story_id)
     path = story_path(story_id)
@@ -85,11 +92,11 @@ def cmd_add(args):
 def cmd_list(args):
     conn = connect()
     init_db(conn)
-    rows = conn.execute("SELECT id, title FROM stories ORDER BY title").fetchall()
+    rows = conn.execute("SELECT id, title FROM stories ORDER BY CAST(id AS INTEGER)").fetchall()
     conn.close()
     for story_id, title in rows:
         mark = "" if os.path.exists(story_path(story_id)) else "  [MISSING FILE]"
-        print("%-40s %s%s" % (title, story_id, mark))
+        print("%-6s %s%s" % (story_id, title, mark))
 
 
 def cmd_retitle(args):
@@ -108,6 +115,7 @@ def cmd_retitle(args):
 def cmd_rename(args):
     conn = connect()
     init_db(conn)
+    check_id(args.new_id)
     if not conn.execute("SELECT 1 FROM stories WHERE id = ?", (args.id,)).fetchone():
         sys.exit("error: no such story: %s" % args.id)
     if conn.execute("SELECT 1 FROM stories WHERE id = ?", (args.new_id,)).fetchone():
@@ -146,6 +154,10 @@ def cmd_check(args):
         if name.endswith(".md")
     } if os.path.isdir(STORIES_DIR) else set()
     problems = 0
+    for story_id in sorted(indexed | on_disk):
+        if not ID_RE.match(story_id):
+            print("id is not a plain number: %s" % story_id)
+            problems += 1
     for story_id in sorted(indexed - on_disk):
         print("missing file: stories/%s.md" % story_id)
         problems += 1
@@ -167,15 +179,15 @@ def main():
     )
 
     p = sub.add_parser("add", help="add a new story")
-    p.add_argument("technical_title", help="sortable title stored in the database")
+    p.add_argument("technical_title", help='topic title stored in the database, e.g. "curl --basic"')
     p.add_argument(
         "-s", "--story-title", help="descriptive title written as the H1 of the .md file"
     )
-    p.add_argument("--id", help="explicit id (default: slug of the technical title)")
+    p.add_argument("--id", help="explicit numeric id (default: next unused number)")
     p.add_argument("-e", "--edit", action="store_true", help="open $EDITOR afterwards")
     p.set_defaults(func=cmd_add)
 
-    p = sub.add_parser("list", help="list stories ordered by technical title")
+    p = sub.add_parser("list", help="list stories ordered by id")
     p.set_defaults(func=cmd_list)
 
     p = sub.add_parser("retitle", help="change a story's technical title")
@@ -183,7 +195,7 @@ def main():
     p.add_argument("technical_title")
     p.set_defaults(func=cmd_retitle)
 
-    p = sub.add_parser("rename", help="change a story's id (moves its file too)")
+    p = sub.add_parser("rename", help="change a story's numeric id (moves its file too)")
     p.add_argument("id")
     p.add_argument("new_id")
     p.set_defaults(func=cmd_rename)

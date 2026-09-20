@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Render the story collection into a static site for GitHub Pages.
 
-Reading order and the technical titles come from stories.db; the story title and
-the prose come from stories/{id}.md. The two titles stay separate: the index is
-*ordered* by the technical title but *shows* the story title.
+The technical titles come from stories.db; the story title and the prose come from
+stories/{id}.md. Reading order is the numeric id. The two titles stay separate: the
+index shows the story title as the link and the technical title as its subtitle.
 """
 
 import argparse
@@ -169,7 +169,7 @@ def main():
     args = parser.parse_args()
 
     conn = sqlite3.connect(DB_PATH)
-    rows = conn.execute("SELECT id, title FROM stories ORDER BY title").fetchall()
+    rows = conn.execute("SELECT id, title FROM stories ORDER BY CAST(id AS INTEGER)").fetchall()
     conn.close()
 
     out = args.out
