@@ -53,6 +53,7 @@ STYLE = """:root {
   --rule: #e2ded4;
   --accent: #8a3324;
   --code-bg: #f1eee6;
+  --card-bg: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -62,6 +63,7 @@ STYLE = """:root {
     --rule: #2e3035;
     --accent: #e4926f;
     --code-bg: #212327;
+    --card-bg: #1c1e22;
   }
 }
 * { box-sizing: border-box; }
@@ -96,9 +98,27 @@ h3 { font-size: 1.05rem; margin-top: 1.8em; }
 a { color: var(--accent); }
 p.tagline { color: var(--muted); font-style: italic; margin-top: 0; }
 ol.stories { list-style: none; padding: 0; margin: 2.5em 0 0; }
-ol.stories li { border-top: 1px solid var(--rule); padding: 1.1em 0; }
+ol.stories li {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--card-bg);
+  padding: 1em 1.1em;
+  margin-bottom: 1em;
+}
 ol.stories a { font-size: 1.15rem; text-decoration: none; font-weight: 600; }
 ol.stories a:hover { text-decoration: underline; }
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .3em 1.5em;
+  margin-top: .55em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .8rem;
+}
+.meta .topic { color: var(--muted); }
+.meta .theme { color: var(--accent); margin-left: auto; }
 .slug {
   display: block;
   margin-top: .3em;
@@ -156,6 +176,11 @@ def strip_title(text):
     return re.sub(r"\A\s*#\s+.*\n", "", text, count=1)
 
 
+def strip_theme(text):
+    """Drop the `*Theme: ...*` line; the page prints the theme from the index."""
+    return re.sub(r"\A\s*\*Theme:[^\n]*\*[ \t]*\n", "", text, count=1)
+
+
 def subtitle(topic, theme):
     """The index and story subtitle: the requested topic, then the theme it was written under."""
     out = html.escape(topic)
@@ -203,7 +228,7 @@ def main():
             text = f.read()
         title = story_title(text, topic)
         md.reset()
-        body = md.convert(strip_title(text))
+        body = md.convert(strip_theme(strip_title(text)))
         page = "<article>\n<h1>%s</h1>\n<p class=\"slug\">%s</p>\n%s\n</article>\n" % (
             html.escape(title),
             subtitle(topic, theme),
@@ -215,8 +240,15 @@ def main():
         entries.append((story_id, topic, theme, title))
 
     items = "\n".join(
-        '  <li><a href="stories/%s.html">%s</a><span class="slug">%s</span></li>'
-        % (html.escape(story_id), html.escape(title), subtitle(topic, theme))
+        '  <li><a href="stories/%s.html">%s</a>\n'
+        '    <span class="meta"><span class="topic">%s</span>'
+        '<span class="theme">%s</span></span></li>'
+        % (
+            html.escape(story_id),
+            html.escape(title),
+            html.escape(topic),
+            html.escape(theme),
+        )
         for story_id, topic, theme, title in entries
     )
     index = (
