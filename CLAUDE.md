@@ -113,6 +113,23 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   what the thing does. If what it *doesn't* do is the point (the kernel reports the
   power button but doesn't shut down), name that specific thing in its own sentence.
 
+- Don't call anything "load-bearing". It isn't how the thing is described in IT, and
+  as a metaphor it says only "this matters" while sounding like it explained why. Say
+  what depends on it and what breaks when it goes: which process reads the file, which
+  startup the symlink survives, what the next login does without it.
+
+- Reserve "broke it" (and "broken") for things that are actually broken: a service
+  that won't start, a file that won't parse, a permission that stops the job running.
+  Don't use it for a theory that turned out wrong, a mystery that finally yielded or a
+  habit someone dropped — say what actually happened to the thing.
+
+- Don't end on a summarising epigram. The tempting last sentence counts up what the
+  story contained and states its moral — "three names, one binary, and the only one
+  that mattered was the one nobody had typed" — and it lands as a punchline that tells
+  the reader what they just read. Finish on something concrete instead and let the
+  reader draw the conclusion: the last command run, the line of output, how the ticket
+  was closed, what the person did next.
+
 ### Never read the existing stories
 
 **Do not open, read, `cat`, `grep`, `head`, diff, or summarise any file under
