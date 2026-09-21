@@ -27,6 +27,13 @@ SITE_TAGLINE = "Scenario stories from the other side of the pager."
 # Absolute URLs are needed for canonical links, Open Graph and the sitemap.
 BASE_URL = "https://xavierdpt.github.io/lifeofasysadmin/"
 AUTHOR = {"@type": "Person", "name": "Xavier Dupont", "url": "https://xavierdpt.github.io/"}
+ISSUES_URL = "https://github.com/xavierdpt/lifeofasysadmin/issues"
+# Shown in the footer of every page, under that page's own footer line.
+NOTE = (
+    "These stories are written by an AI, checked against the actual source code, and "
+    "read by a human before publication. Sorry for the occasional poor writing style "
+    '\u2014 <a href="%s">feedback is welcome</a>.' % ISSUES_URL
+)
 
 PAGE = """<!DOCTYPE html>
 <html lang="en">
@@ -55,6 +62,7 @@ PAGE = """<!DOCTYPE html>
 </main>
 <footer>
   <p>%(footer)s</p>
+  <p class="note">%(note)s</p>
 </footer>
 </body>
 </html>
@@ -174,6 +182,7 @@ footer p {
   font-size: .8rem;
   color: var(--muted);
 }
+footer p.note { margin-top: .8em; font-size: .75rem; }
 .nav { margin-top: 3em; font-size: .9rem; }
 """
 
@@ -231,6 +240,7 @@ def render(title, body, root, footer, url, description, og_type, jsonld, head_ti
         "body": body,
         "root": root,
         "footer": html.escape(footer),
+        "note": NOTE,
     }
 
 
