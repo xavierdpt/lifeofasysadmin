@@ -43,6 +43,8 @@ PAGE = """<!DOCTYPE html>
 <meta property="og:url" content="%(url)s">
 <script type="application/ld+json">%(jsonld)s</script>
 <link rel="stylesheet" href="%(root)sstyle.css">
+<script data-goatcounter="https://xavierdpt.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 <header class="site">
