@@ -6,7 +6,7 @@ A collection of illustrative scenario stories about the life of a system adminis
 
 ```
 stories.db             sqlite index: one row per story (numeric id, requested topic
-                       verbatim, theme)
+                       verbatim, theme, summary)
 stories/{id}.md        the story content, one file per story (1.md, 2.md, … — do not read)
 scripts/story.py       CLI to create and maintain stories
 scripts/build_site.py  renders the collection into the GitHub Pages site
@@ -28,6 +28,12 @@ different:
 
 They are not expected to match. Never "fix" one to match the other.
 
+The **summary** — the `summary` column — is one paragraph saying what happens in the
+story and what the topic turns out to be for. The site renders it (as inline
+markdown) under the subtitle on the index. Write it once the story is finished, with
+`summarize`, and keep it to roughly 80–100 words. The title and writing-style rules
+apply to it too.
+
 Alongside them, the **theme** — the palette entry the story was written under, e.g.
 `Migration` — is recorded in the `theme` column and named in the story itself. The
 site prints it after the topic in the subtitle, on the index and on the story page.
@@ -43,7 +49,8 @@ touching the other.
 CREATE TABLE stories (
     id    TEXT PRIMARY KEY,          -- a plain number, as text: "1", "2", ...
     topic TEXT NOT NULL,             -- requested topic verbatim, e.g. "curl --basic"
-    theme TEXT NOT NULL DEFAULT ''   -- the palette theme, e.g. "Migration"
+    theme TEXT NOT NULL DEFAULT '',  -- the palette theme, e.g. "Migration"
+    summary TEXT NOT NULL DEFAULT '' -- one-paragraph summary shown on the site index
 );
 ```
 
@@ -60,6 +67,7 @@ python3 scripts/story.py add "curl --cert" \
 python3 scripts/story.py list                        # all stories, in reading order
 python3 scripts/story.py retitle <id> "<new requested topic verbatim>"
 python3 scripts/story.py retheme <id> "<theme>"
+python3 scripts/story.py summarize <id> "<summary>"  # one paragraph, inline markdown ok
 python3 scripts/story.py rename <id> <new-id>        # renumbers the row and the .md file
 python3 scripts/story.py remove <id>                 # drops the row, keeps the file
 python3 scripts/story.py check                       # index and files agree?
@@ -126,7 +134,9 @@ when the collection is read end to end.
 Two narrow exceptions, both of which are bookkeeping rather than reading:
 
 - `scripts/story.py list` and `scripts/story.py check` are always fine. They report
-  ids, requested topics verbatim and themes, never content.
+  ids, requested topics verbatim and themes, never content. The `summary` column *is*
+  content: `list` does not print it, and ad-hoc `sqlite3` queries should not select it
+  (no `SELECT *`) unless you are writing or revising that story's summary.
 - If the user explicitly asks you to read, edit, review or compare a specific story in
   that moment, do it. The instruction is about reaching for them unprompted.
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Manage the story collection: sqlite index (id, topic, theme) + stories/{id}.md.
+"""Manage the story collection: sqlite index (id, topic, theme, summary) + stories/{id}.md.
 
 Ids are plain numbers ("1", "2", ...), assigned sequentially. The requested topic
 verbatim names the topic, e.g. "curl --basic"; the theme is the palette entry the
-story was written under, e.g. "Migration".
+story was written under, e.g. "Migration". The summary is a one-paragraph account of
+the story, shown under its title on the site index.
 """
 
 import argparse
@@ -28,15 +29,18 @@ def init_db(conn):
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS stories (
-            id    TEXT PRIMARY KEY,
-            topic TEXT NOT NULL,
-            theme TEXT NOT NULL DEFAULT ''
+            id      TEXT PRIMARY KEY,
+            topic   TEXT NOT NULL,
+            theme   TEXT NOT NULL DEFAULT '',
+            summary TEXT NOT NULL DEFAULT ''
         )
         """
     )
     columns = {row[1] for row in conn.execute("PRAGMA table_info(stories)")}
     if "theme" not in columns:
         conn.execute("ALTER TABLE stories ADD COLUMN theme TEXT NOT NULL DEFAULT ''")
+    if "summary" not in columns:
+        conn.execute("ALTER TABLE stories ADD COLUMN summary TEXT NOT NULL DEFAULT ''")
     conn.commit()
 
 
@@ -133,6 +137,19 @@ def cmd_retheme(args):
     print("%s -> %s" % (args.id, args.theme))
 
 
+def cmd_summarize(args):
+    conn = connect()
+    init_db(conn)
+    cur = conn.execute(
+        "UPDATE stories SET summary = ? WHERE id = ?", (args.summary, args.id)
+    )
+    conn.commit()
+    conn.close()
+    if cur.rowcount == 0:
+        sys.exit("error: no such story: %s" % args.id)
+    print("%s: summary set (%d words)" % (args.id, len(args.summary.split())))
+
+
 def cmd_rename(args):
     conn = connect()
     init_db(conn)
@@ -223,6 +240,11 @@ def main():
     p.add_argument("id")
     p.add_argument("theme")
     p.set_defaults(func=cmd_retheme)
+
+    p = sub.add_parser("summarize", help="set the one-paragraph summary shown on the index")
+    p.add_argument("id")
+    p.add_argument("summary")
+    p.set_defaults(func=cmd_summarize)
 
     p = sub.add_parser("rename", help="change a story's numeric id (moves its file too)")
     p.add_argument("id")

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Render the story collection into a static site for GitHub Pages.
 
-The requested topic and the theme come from stories.db; the story title and the prose
+The requested topic, the theme and the summary come from stories.db; the story title and the prose
 come from stories/{id}.md. Reading order is the numeric id. Topic and title stay
 separate: the index shows the story title as the link, and the topic followed by the
-theme as its subtitle.
+theme as its subtitle, followed by the summary.
 """
 
 import argparse
@@ -119,6 +119,7 @@ ol.stories a:hover { text-decoration: underline; }
 }
 .meta .topic { color: var(--muted); }
 .meta .theme { color: var(--accent); margin-left: auto; }
+ol.stories p.summary { margin: .7em 0 0; font-size: .95rem; }
 .slug {
   display: block;
   margin-top: .3em;
@@ -189,6 +190,13 @@ def subtitle(topic, theme):
     return out
 
 
+def inline_markdown(md, text):
+    """Render one paragraph of markdown without its wrapping <p>."""
+    md.reset()
+    out = md.convert(text).strip()
+    return re.sub(r"\A<p>(.*)</p>\Z", r"\1", out, flags=re.S)
+
+
 def render(title, body, root, footer):
     return PAGE % {
         "title": html.escape(title),
@@ -206,7 +214,7 @@ def main():
 
     conn = sqlite3.connect(DB_PATH)
     rows = conn.execute(
-        "SELECT id, topic, theme FROM stories ORDER BY CAST(id AS INTEGER)"
+        "SELECT id, topic, theme, summary FROM stories ORDER BY CAST(id AS INTEGER)"
     ).fetchall()
     conn.close()
 
@@ -219,7 +227,7 @@ def main():
 
     entries = []
     missing = []
-    for story_id, topic, theme in rows:
+    for story_id, topic, theme, summary in rows:
         path = os.path.join(STORIES_DIR, story_id + ".md")
         if not os.path.exists(path):
             missing.append(story_id)
@@ -237,19 +245,20 @@ def main():
         page += '<p class="nav"><a href="../index.html">&larr; All stories</a></p>\n'
         with open(os.path.join(out, "stories", story_id + ".html"), "w", encoding="utf-8") as f:
             f.write(render(title, page, "../", "Built from stories/%s.md" % story_id))
-        entries.append((story_id, topic, theme, title))
+        entries.append((story_id, topic, theme, title, summary))
 
     items = "\n".join(
         '  <li><a href="stories/%s.html">%s</a>\n'
         '    <span class="meta"><span class="topic">%s</span>'
-        '<span class="theme">%s</span></span></li>'
+        '<span class="theme">%s</span></span>%s</li>'
         % (
             html.escape(story_id),
             html.escape(title),
             html.escape(topic),
             html.escape(theme),
+            '\n    <p class="summary">%s</p>' % inline_markdown(md, summary) if summary else "",
         )
-        for story_id, topic, theme, title in entries
+        for story_id, topic, theme, title, summary in entries
     )
     index = (
         "<h1>%s</h1>\n<p class=\"tagline\">%s</p>\n<ol class=\"stories\">\n%s\n</ol>\n"
