@@ -235,9 +235,11 @@ same event told by the sysadmin and by the user who filed the ticket.
 
 ## src/ — reference sources
 
-`src/` holds the unpacked upstream sources of the packages the stories talk about
-(currently `curl` 8.5.0, as the Ubuntu source package plus its extracted tree). More
-packages will be added there over time.
+`src/` holds the unpacked upstream sources of the packages the stories talk about,
+each as the Ubuntu source package plus its extracted tree (for example `curl` 8.5.0).
+This is not an inventory: `ls src/` is the source of truth, and the list is not
+meant to be kept up to date here. When a story needs a package that isn't there yet,
+fetch it with `apt source <package>` from inside `src/`. The directory is gitignored.
 
 Use it to make the stories **true**: check actual option names, error messages, exit
 codes, defaults and behaviour against the real documentation and source code rather
