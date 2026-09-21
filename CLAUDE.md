@@ -80,8 +80,20 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
 - Each `stories/{id}.md` begins with a single `# ` heading — the story title, followed
   by a `*Theme: <theme>*` line naming the theme the story was written under. The same
   theme goes in the `theme` column, spelled as the palette spells it.
+- Don't build the story title on a negation or an absence: "nobody", "never",
+  "no X can", "does not", "nothing but", "ignores". Stories often turn on something
+  missing, and "the X that didn't Y" is the easy way to name that reveal, so the
+  titles converged on it. The index lists them all together, and there it reads as a
+  tic. Name something concrete from the story instead: an object, a moment, a
+  number, a line of output.
 - Add stories with `scripts/story.py add` rather than creating files by hand, so the
   index and the files never drift apart. Run `check` if in doubt.
+- In commit messages, refer to a story by its id and requested topic verbatim
+  (`Add story 6: acpid`, `Story 2: tighten the plugin section`), never by its title
+  or a paraphrase of it. Commit subjects show up in `git log` and in the git status
+  snapshot at the start of every session, so titles there put the earlier titles in
+  context while the next one is being written. Older commits still carry titles; do
+  not mine `git log` for them.
 
 ### Never read the existing stories
 
