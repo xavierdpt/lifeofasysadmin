@@ -28,10 +28,12 @@ different:
 
 They are not expected to match. Never "fix" one to match the other.
 
-The **summary** — the `summary` column — is one paragraph saying what happens in the
-story and what the topic turns out to be for. The site renders it (as inline
+The **summary** — the `summary` column — is a hook, not an abstract. It sets up the
+story's situation (who, where, what just went wrong or needs doing, the stakes) so a
+reader wants to open it, and stops there. It does not explain the topic and does not
+reveal the diagnosis, the cause, the fix or the ending. The site renders it (as inline
 markdown) under the subtitle on the index. Write it once the story is finished, with
-`summarize`, and keep it to roughly 80–100 words. The title and writing-style rules
+`summarize`, and keep it to roughly 40–60 words. The title and writing-style rules
 apply to it too.
 
 Alongside them, the **theme** — the palette entry the story was written under, e.g.
