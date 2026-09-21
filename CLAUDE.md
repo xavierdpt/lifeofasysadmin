@@ -95,6 +95,14 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   context while the next one is being written. Older commits still carry titles; do
   not mine `git log` for them.
 
+### Writing style
+
+- Don't close a description with an exclusivity flourish: "and nothing else",
+  "nothing more", "that's all it does", "no X, no Y, just Z". It adds emphasis
+  without adding information, and it had become a verbal tic across the stories. Say
+  what the thing does. If what it *doesn't* do is the point (the kernel reports the
+  power button but doesn't shut down), name that specific thing in its own sentence.
+
 ### Never read the existing stories
 
 **Do not open, read, `cat`, `grep`, `head`, diff, or summarise any file under
