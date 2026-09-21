@@ -315,7 +315,7 @@ def main():
     )
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
         f.write(render(
-            SITE_TITLE, index, "./", "%d stories, in reading order." % len(entries),
+            SITE_TITLE, index, "./", "%d stories." % len(entries),
             BASE_URL, SITE_TAGLINE, "website",
             {"@type": "WebSite", "name": SITE_TITLE, "description": SITE_TAGLINE,
              "url": BASE_URL, "author": AUTHOR},
