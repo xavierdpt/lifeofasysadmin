@@ -9,6 +9,7 @@ theme as its subtitle, followed by the summary.
 
 import argparse
 import html
+import json
 import os
 import re
 import sqlite3
@@ -23,6 +24,9 @@ STORIES_DIR = os.path.join(ROOT, "stories")
 
 SITE_TITLE = "Life of a Sysadmin"
 SITE_TAGLINE = "Scenario stories from the other side of the pager."
+# Absolute URLs are needed for canonical links, Open Graph and the sitemap.
+BASE_URL = "https://xavierdpt.github.io/lifeofasysadmin/"
+AUTHOR = {"@type": "Person", "name": "Xavier Dupont", "url": "https://xavierdpt.github.io/"}
 
 PAGE = """<!DOCTYPE html>
 <html lang="en">
@@ -30,11 +34,19 @@ PAGE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>%(title)s</title>
+<meta name="description" content="%(description)s">
+<link rel="canonical" href="%(url)s">
+<meta property="og:type" content="%(og_type)s">
+<meta property="og:site_name" content="%(site_title)s">
+<meta property="og:title" content="%(og_title)s">
+<meta property="og:description" content="%(description)s">
+<meta property="og:url" content="%(url)s">
+<script type="application/ld+json">%(jsonld)s</script>
 <link rel="stylesheet" href="%(root)sstyle.css">
 </head>
 <body>
 <header class="site">
-  <a class="brand" href="%(root)sindex.html">%(site_title)s</a>
+  <a class="brand" href="%(root)s">%(site_title)s</a>
 </header>
 <main>
 %(body)s
@@ -197,14 +209,35 @@ def inline_markdown(md, text):
     return re.sub(r"\A<p>(.*)</p>\Z", r"\1", out, flags=re.S)
 
 
-def render(title, body, root, footer):
+def plain_text(md, text):
+    """Inline markdown flattened to plain text, for meta descriptions."""
+    out = re.sub(r"<[^>]+>", "", inline_markdown(md, text))
+    return " ".join(html.unescape(out).split())
+
+
+def render(title, body, root, footer, url, description, og_type, jsonld, head_title=None):
+    """`title` is the page's own name; `head_title` is the <title>, if it differs."""
     return PAGE % {
-        "title": html.escape(title),
+        "title": html.escape(head_title or title),
+        "og_title": html.escape(title),
         "site_title": html.escape(SITE_TITLE),
+        "description": html.escape(description),
+        "url": html.escape(url),
+        "og_type": og_type,
+        # "</" would end the <script> element early.
+        "jsonld": json.dumps(dict(jsonld, **{"@context": "https://schema.org"}), ensure_ascii=False).replace("</", "<\\/"),
         "body": body,
         "root": root,
         "footer": html.escape(footer),
     }
+
+
+def sitemap(urls):
+    items = "\n".join("  <url><loc>%s</loc></url>" % html.escape(u) for u in urls)
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n%s\n</urlset>\n' % items
+    )
 
 
 def main():
@@ -242,9 +275,23 @@ def main():
             subtitle(topic, theme),
             body,
         )
-        page += '<p class="nav"><a href="../index.html">&larr; All stories</a></p>\n'
+        page += '<p class="nav"><a href="../">&larr; All stories</a></p>\n'
+        url = BASE_URL + "stories/%s.html" % story_id
+        description = plain_text(md, summary) if summary else "%s: %s." % (SITE_TITLE, topic)
+        jsonld = {
+            "@type": "Article",
+            "headline": title,
+            "description": description,
+            "url": url,
+            "author": AUTHOR,
+            "isPartOf": {"@type": "WebSite", "name": SITE_TITLE, "url": BASE_URL},
+        }
         with open(os.path.join(out, "stories", story_id + ".html"), "w", encoding="utf-8") as f:
-            f.write(render(title, page, "../", "Built from stories/%s.md" % story_id))
+            f.write(render(
+                title, page, "../", "Built from stories/%s.md" % story_id,
+                url, description, "article", jsonld,
+                head_title="%s – %s" % (title, SITE_TITLE),
+            ))
         entries.append((story_id, topic, theme, title, summary))
 
     items = "\n".join(
@@ -265,7 +312,16 @@ def main():
         % (html.escape(SITE_TITLE), html.escape(SITE_TAGLINE), items)
     )
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
-        f.write(render(SITE_TITLE, index, "", "%d stories, in reading order." % len(entries)))
+        f.write(render(
+            SITE_TITLE, index, "./", "%d stories, in reading order." % len(entries),
+            BASE_URL, SITE_TAGLINE, "website",
+            {"@type": "WebSite", "name": SITE_TITLE, "description": SITE_TAGLINE,
+             "url": BASE_URL, "author": AUTHOR},
+        ))
+
+    # The site root's robots.txt points crawlers here; a project site cannot serve its own.
+    with open(os.path.join(out, "sitemap.xml"), "w", encoding="utf-8") as f:
+        f.write(sitemap([BASE_URL] + [BASE_URL + "stories/%s.html" % e[0] for e in entries]))
 
     with open(os.path.join(out, "style.css"), "w", encoding="utf-8") as f:
         f.write(STYLE)
