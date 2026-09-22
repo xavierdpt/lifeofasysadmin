@@ -10,6 +10,7 @@ stories.db             sqlite index: one row per story (numeric id, requested to
 stories/{id}.md        the story content, one file per story (1.md, 2.md, … — do not read)
 scripts/story.py       CLI to create and maintain stories
 scripts/build_site.py  renders the collection into the GitHub Pages site
+themes.txt             the palette: one line per subtheme, `[theme] subtheme: gloss`
 src/                   upstream package sources, for fact-checking stories (read-only)
 aux/                   off-limits — do not read, modify, or reference
 ```
@@ -27,6 +28,14 @@ different:
   written for a reader.
 
 They are not expected to match. Never "fix" one to match the other.
+
+When the user writes the topic as `[x] y`, it means **the program `y` shipped by the
+binary package `x`** — `[akonadi-backend-mysql] mysqld-akonadi` is the `mysqld-akonadi`
+program from the `akonadi-backend-mysql` package. The bracket is there because the
+program name alone does not say where it comes from: it disambiguates programs that
+several packages could plausibly ship, and points at which package to `apt source` when
+checking the story against `src/`. Record the whole thing, brackets included, as the
+requested topic verbatim; the story is about `y`, and `x` is how you find it.
 
 The **summary** — the `summary` column — is a hook, not an abstract. It sets up the
 story's situation (who, where, what just went wrong or needs doing, the stakes) so a
@@ -89,7 +98,7 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   It is not a sort key and takes no numeric prefix.
 - Each `stories/{id}.md` begins with a single `# ` heading — the story title, followed
   by a `*Theme: <theme>*` line naming the theme the story was written under. The same
-  theme goes in the `theme` column, spelled as the palette spells it.
+  theme goes in the `theme` column, spelled as `themes.txt` spells it.
 - Don't build the story title on a negation or an absence: "nobody", "never",
   "no X can", "does not", "nothing but", "ignores". Stories often turn on something
   missing, and "the X that didn't Y" is the easy way to name that reveal, so the
@@ -140,8 +149,8 @@ exactly when the temptation is strongest.
 
 Everything you need to write a story is in this file: the topic-and-title rule, the
 `# ` heading and `*Theme:*` line, the "show the feature in use and say why it exists"
-requirement, and the themes palette. If something about the expected shape of a story is unclear, ask —
-do not go and look at a neighbouring story to infer it.
+requirement, and the themes in `themes.txt`. If something about the expected shape of
+a story is unclear, ask — do not go and look at a neighbouring story to infer it.
 
 The reason is voice. Stories written by someone who has just read the previous one
 converge: the same rhythm, the same section headings, the same closing move, the same
@@ -159,9 +168,8 @@ Two narrow exceptions, both of which are bookkeeping rather than reading:
 - If the user explicitly asks you to read, edit, review or compare a specific story in
   that moment, do it. The instruction is about reaching for them unprompted.
 
-To choose a requested topic verbatim, and to see which ids are taken, use `list`. To
-propose themes, use the palette below and the topics `list` gives you — not the story
-text.
+To choose a requested topic verbatim, and to see which ids are taken, use `list`. The
+themes come out of `themes.txt` at random — never from the story text.
 
 ### Show the feature in use, and say why it exists
 
@@ -181,8 +189,8 @@ chose this host, this vendor or this directory layout is background at most; the
 question the story answers is why the option, flag, protocol or policy was built and
 what it is for.
 
-That, alongside the theme the user picked from the palette below, is the whole
-requirement.
+That, alongside the theme the user picked from the three drawn from `themes.txt`, is
+the whole requirement.
 There is no prescribed shape for it — no required section, heading, bullet list or
 running order. Some stories will want a paragraph of history, some a line of
 dialogue, some a single aside in the middle of the diagnosis. Work out each time
@@ -196,89 +204,45 @@ inventing a plausible-sounding flag.
 
 ## Story themes
 
-A working palette of scenarios for the collection. Not a checklist — a menu to pick
-from so the stories stay varied instead of all being "prod broke at 3am".
+The palette of scenarios lives in `themes.txt`, one line per subtheme, in the form
+`[theme] subtheme: gloss` — the broad theme in brackets, then the specific subtheme and
+a line on what it is. It keeps the stories varied instead of all being "prod broke at
+3am".
 
-### Propose three themes before writing
+### Draw three themes before writing
 
-The division of labour is fixed: **the user supplies the topic, you supply the
-themes.**
+The division of labour is fixed: **the user supplies the topic, `themes.txt` supplies
+the themes.**
 
 The topic the user names *is* the requested topic verbatim — record it as given (`curl
 --basic`), do not reword, expand or prettify it, and do not invent a topic of your
-own.
+own. That includes the `[x] y` form: it is written to the `topic` column exactly as
+the user typed it, brackets and all.
 
-Then propose **three** themes from the palette below and let the user choose. Do not
-pick one yourself and start writing. Each proposal is one or two lines: the theme,
-and how that topic would play out under it — the same option reads completely
-differently as a migration, a pentest finding or an onboarding conversation. Make the
-three genuinely different from each other rather than three shades of "it broke";
-varying the angle (first day versus tenth year, who caused it versus who found it) is
-a legitimate way to make them differ.
+Then draw three themes at random:
+
+```bash
+sort -R themes.txt | tail -3
+```
+
+Offer those three and let the user choose. Take the draw as it comes: don't swap in a
+theme that suits the topic better, don't re-roll a draw that looks awkward, and don't
+pick one yourself and start writing. For each of the three, say in one or two lines how
+that topic would play out under it — the same option reads completely differently as a
+migration, a pentest finding or an onboarding conversation, and an unlikely pairing is
+usually the interesting one. Varying the angle (first day versus tenth year, who caused
+it versus who found it) is part of that work.
 
 Write only after the user picks one. Record the theme they picked with `add -t` (or
 `retheme`), and name it in the story's `*Theme:*` line, so the site can show it next
-to the topic.
-
-### Incident and failure
-
-- Production outage: the symptom, the wrong first hypothesis, the actual cause.
-- Slow burn: degradation nobody noticed until a threshold was crossed.
-- The one-character bug: a copied-and-pasted command that was subtly wrong.
-- Cascading failure: a small dependency taking down something far away from it.
-- Heisenbug: the problem that disappears while you are watching it.
-- Failed rollback: the escape hatch that had never been tested.
-- Post-incident review: what the timeline actually shows versus what people remember.
-
-### Security
-
-- Attack suspicion: an anomaly that may or may not be an intrusion, and the triage.
-- Incident response: containment, evidence preservation, the call on when to pull the plug.
-- Red team: stealth, persistence, lateral movement — from the operator's side.
-- Blue team and detection engineering: writing the rule, then finding its blind spot.
-- Pentest engagement: the finding, the writeup, and the "but it isn't exposed" reply.
-- Hardening and least privilege: removing access without removing the ability to work.
-- Secrets handling: the credential found in a place it should never have been.
-- Supply chain: a dependency, image, or package that was not what it claimed to be.
-- Isolation boundaries: containers, namespaces, and assumptions about what is "internal".
-
-### Operations and change
-
-- Migration: moving a service and discovering what was undocumented about it.
-- Upgrade: a version bump with a behaviour change nobody read the changelog for.
-- Deprecation: retiring something still in use by someone who never answered the email.
-- Capacity and scaling: running out of a resource nobody was graphing.
-- Performance investigation: where the time actually goes.
-- Configuration drift: the host that was special and nobody knew why.
-- Backup and restore: the restore drill and what it revealed.
-- Disaster recovery and failover: the plan meeting reality.
-- Cost: the bill that explains an architectural decision after the fact.
-
-### Tools and craft
-
-- Debugging with whatever is available: a stripped-down image, no usual toolbox.
-- Reading the source or the manual to settle a question that memory got wrong.
-- Automation: the script that saved hours, and the script that caused an outage.
-- Observability: adding the signal that would have caught it, after it wasn't caught.
-- Portability: the same command behaving differently on another OS or platform.
-- Legacy archaeology: understanding a system whose authors are long gone.
-- Testing in staging: why staging did not reproduce it.
-
-### People and process
-
-- On-call: the handover, the pager, the night that shaped a policy.
-- Onboarding and mentoring: explaining a subtlety to someone encountering it first time.
-- Communication under pressure: what to tell stakeholders while still diagnosing.
-- Pushback: saying no to a change, or being overruled and documenting it.
-- Compliance and audit: proving a control works, not just asserting it.
-- Vendor and support: escalation, and the limits of someone else's runbook.
-- Documentation: the runbook rewrite, and what makes a command copy-pasteable.
-- Blameless culture: how the same incident reads with and without blame.
+to the topic. What gets recorded is the subtheme — the part between the bracket and the
+colon, `Migration`, `Heisenbug` — not the bracketed theme and not the gloss after the
+colon.
 
 ### Angle, not topic
 
-Any theme above can be told from a different vantage point, which changes the story
-more than the subject does: first day versus tenth year, the person who caused it
+Any theme in the file can be told from a different vantage point, which changes the
+story more than the subject does: first day versus tenth year, the person who caused it
 versus the person who found it, real time versus reconstructed afterwards, or the
 same event told by the sysadmin and by the user who filed the ticket.
 

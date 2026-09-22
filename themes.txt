@@ -1,0 +1,40 @@
+[Incident and failure] Production outage: the symptom, the wrong first hypothesis, the actual cause.
+[Incident and failure] Slow burn: degradation nobody noticed until a threshold was crossed.
+[Incident and failure] The one-character bug: a copied-and-pasted command that was subtly wrong.
+[Incident and failure] Cascading failure: a small dependency taking down something far away from it.
+[Incident and failure] Heisenbug: the problem that disappears while you are watching it.
+[Incident and failure] Failed rollback: the escape hatch that had never been tested.
+[Incident and failure] Post-incident review: what the timeline actually shows versus what people remember.
+[Security] Attack suspicion: an anomaly that may or may not be an intrusion, and the triage.
+[Security] Incident response: containment, evidence preservation, the call on when to pull the plug.
+[Security] Red team: stealth, persistence, lateral movement — from the operator's side.
+[Security] Blue team and detection engineering: writing the rule, then finding its blind spot.
+[Security] Pentest engagement: the finding, the writeup, and the "but it isn't exposed" reply.
+[Security] Hardening and least privilege: removing access without removing the ability to work.
+[Security] Secrets handling: the credential found in a place it should never have been.
+[Security] Supply chain: a dependency, image, or package that was not what it claimed to be.
+[Security] Isolation boundaries: containers, namespaces, and assumptions about what is "internal".
+[Operations and change] Migration: moving a service and discovering what was undocumented about it.
+[Operations and change] Upgrade: a version bump with a behaviour change nobody read the changelog for.
+[Operations and change] Deprecation: retiring something still in use by someone who never answered the email.
+[Operations and change] Capacity and scaling: running out of a resource nobody was graphing.
+[Operations and change] Performance investigation: where the time actually goes.
+[Operations and change] Configuration drift: the host that was special and nobody knew why.
+[Operations and change] Backup and restore: the restore drill and what it revealed.
+[Operations and change] Disaster recovery and failover: the plan meeting reality.
+[Operations and change] Cost: the bill that explains an architectural decision after the fact.
+[Tools and craft] Debugging with whatever is available: a stripped-down image, no usual toolbox.
+[Tools and craft] Reading the source or the manual to settle a question that memory got wrong.
+[Tools and craft] Automation: the script that saved hours, and the script that caused an outage.
+[Tools and craft] Observability: adding the signal that would have caught it, after it wasn't caught.
+[Tools and craft] Portability: the same command behaving differently on another OS or platform.
+[Tools and craft] Legacy archaeology: understanding a system whose authors are long gone.
+[Tools and craft] Testing in staging: why staging did not reproduce it.
+[People and process] On-call: the handover, the pager, the night that shaped a policy.
+[People and process] Onboarding and mentoring: explaining a subtlety to someone encountering it first time.
+[People and process] Communication under pressure: what to tell stakeholders while still diagnosing.
+[People and process] Pushback: saying no to a change, or being overruled and documenting it.
+[People and process] Compliance and audit: proving a control works, not just asserting it.
+[People and process] Vendor and support: escalation, and the limits of someone else's runbook.
+[People and process] Documentation: the runbook rewrite, and what makes a command copy-pasteable.
+[People and process] Blameless culture: how the same incident reads with and without blame.
