@@ -109,8 +109,8 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   "no X can", "does not", "nothing but", "ignores". Stories often turn on something
   missing, and "the X that didn't Y" is the easy way to name that reveal, so the
   titles converged on it. The index lists them all together, and there it reads as a
-  tic. Name something concrete from the story instead: an object, a moment, a
-  number, a line of output.
+  tic. That is the whole rule — beyond it, title the story however it wants to be
+  titled.
 - Add stories with `scripts/story.py add` rather than creating files by hand, so the
   index and the files never drift apart. Run `check` if in doubt.
 - In commit messages, refer to a story by its id and requested topic verbatim
