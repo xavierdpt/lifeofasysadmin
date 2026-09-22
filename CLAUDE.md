@@ -37,6 +37,12 @@ several packages could plausibly ship, and points at which package to `apt sourc
 checking the story against `src/`. Record the whole thing, brackets included, as the
 requested topic verbatim; the story is about `y`, and `x` is how you find it.
 
+When the user gives the package alone, as `[x]` with no program after it, the choice is
+left to you: pick whichever program that package ships that the story wants, or write
+about the package itself if that serves better. Don't ask which one. The requested topic
+verbatim is still what the user typed — `[alsa-utils]`, bare brackets and nothing after
+them — whichever program the story ends up using.
+
 The **summary** — the `summary` column — is a hook, not an abstract. It sets up the
 story's situation (who, where, what just went wrong or needs doing, the stakes) so a
 reader wants to open it, and stops there. It does not explain the topic and does not
@@ -219,19 +225,42 @@ The topic the user names *is* the requested topic verbatim — record it as give
 own. That includes the `[x] y` form: it is written to the `topic` column exactly as
 the user typed it, brackets and all.
 
-Then draw three themes at random:
+Then draw three themes at random, **before reading anything in `src/`**:
 
 ```bash
 sort -R themes.txt | tail -3
 ```
 
+The order matters. Reading the sources first leaves you with one or two facts about
+the topic already in mind — the flag that looked interesting, the error string that
+jumped out — and the three pitches then come out as the same material dressed three
+ways: the same option, the same output, the same reveal, with a migration, a pentest
+and an onboarding wrapped around it. The user is then choosing a costume, not a story.
+Draw the themes while you still know nothing but the topic's name, so each one sends
+you looking for something different.
+
+With the three themes in hand, go to `src/` once per theme and find that theme its own
+material: a different part of the topic's surface — another option, another code path,
+another default, another error message, another line of the man page or changelog —
+whichever part of the topic that particular theme would actually run into. A migration
+meets the compatibility behaviour and the deprecated spelling; a pentest finding meets
+what the feature reveals on the wire or in a log; a first day meets the default nobody
+set. If two of the three themes lead you to the same fact, keep looking for one of
+them: three pitches resting on one detail is the failure this ordering exists to
+prevent.
+
 Offer those three and let the user choose. Take the draw as it comes: don't swap in a
 theme that suits the topic better, don't re-roll a draw that looks awkward, and don't
 pick one yourself and start writing. For each of the three, say in one or two lines how
-that topic would play out under it — the same option reads completely differently as a
-migration, a pentest finding or an onboarding conversation, and an unlikely pairing is
-usually the interesting one. Varying the angle (first day versus tenth year, who caused
-it versus who found it) is part of that work.
+that topic would play out under it, naming the concrete thing from `src/` that theme
+would be built on — the same option reads completely differently as a migration, a
+pentest finding or an onboarding conversation, and an unlikely pairing is usually the
+interesting one. Varying the angle (first day versus tenth year, who caused it versus
+who found it) is part of that work.
+
+Once the user picks, the rest of the checking happens as usual: the chosen theme's
+detail is the story's starting point, not its limit, and everything the story asserts
+still gets verified against `src/` before it is written down.
 
 Write only after the user picks one. Record the theme they picked with `add -t` (or
 `retheme`), and name it in the story's `*Theme:*` line, so the site can show it next
@@ -260,6 +289,10 @@ Use it to make the stories **true**: check actual option names, error messages, 
 codes, defaults and behaviour against the real documentation and source code rather
 than from memory. When a story asserts something concrete about a tool, grep `src/`
 for it first.
+
+Timing: the first visit to `src/` for a new story comes *after* the three themes are
+drawn, and is made once per theme, looking for a different part of the topic for each
+— see "Draw three themes before writing".
 
 Treat `src/` as read-only reference material — never edit it, and don't let its files
 show up in the story collection.
