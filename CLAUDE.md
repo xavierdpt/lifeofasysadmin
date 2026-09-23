@@ -145,6 +145,20 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   reader draw the conclusion: the last command run, the line of output, how the ticket
   was closed, what the person did next.
 
+- Don't hang a wry aside off a fact. The shape is a concrete detail, a comma, and a
+  relative clause that reframes it knowingly — "the flow records came in on Mondays,
+  and Marit read them on Mondays, which was the only part of the arrangement anyone
+  had ever written down". It is texture added for its own sake: it invokes a history
+  ("the arrangement") the story does not have and never uses, its wit is built on an
+  absence, and the knowingness is generic enough to fit any team anywhere. The
+  variants are all the same move — `which was the only X anyone had ever Y`, `not
+  that anyone had asked`, `for reasons nobody could reconstruct`. Stop at the fact.
+  If the history behind it matters, the story can go and find out what it was; if it
+  doesn't, the aside is a promise the story never pays.
+
+  Fix these by deleting them, not by writing a better one. A replacement aside,
+  chosen more carefully, is the next tic.
+
 ### Never read the existing stories
 
 **Do not open, read, `cat`, `grep`, `head`, diff, or summarise any file under
