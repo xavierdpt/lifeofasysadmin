@@ -82,6 +82,20 @@ a story.
   what the host does not have, which packet is dropped where. That is both true
   and more concrete than the hypothetical it replaces.
 
+- Don't locate one thing by its nearness to another, and don't give software a
+  will. "The sentence in `anytun-controld(8)`, one man page over" borrows the
+  adjacency of a shelf for something that is not arranged in a row; the page had
+  already been named exactly, and "nearby" is not a location for documentation.
+  "`showtables` prints what it chooses to print" hands a program a preference in
+  order to avoid saying what it does.
+
+  Both are placeholders standing where a checkable fact goes, and the fact is
+  always better: `showtables` prints two lines and drops the rest, because in
+  `anytun-showtables.cpp` the line that would print the key derivation type is
+  commented out. That is shorter than the personification and it changes what the
+  scene means — the tool is not withholding anything, someone commented out a
+  line, and the bytes are on the socket either way.
+
 - Don't announce the next move before the scene makes it. "She did not know what
   2342 was. That was the first thing to fix." — the verdict sentence says what the
   story is about to do, and then the section heading says it again, and then the
