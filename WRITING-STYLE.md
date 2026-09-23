@@ -62,6 +62,26 @@ a story.
   something does not entitle it to a place; the sentence before it was already
   finished.
 
+- Don't discharge "why does this feature exist" with a compressed hypothetical.
+  The shape is "without it you are back to pinning `-r` and `-o` by hand on every
+  host and hoping the peer never changes address": a workaround named rather than
+  shown, in one clause, with the requirement ticked off. It switches into an
+  instructional second person in the middle of a paragraph about what the daemon
+  does, and it ends on the weary-sysadmin flourish — "and hoping X never Y" — that
+  the aside rule already covers.
+
+  It is also the likeliest sentence in a story to be plain false, and for a
+  structural reason: it describes a situation that never happened, so there is no
+  output to compare it against and nothing obvious to grep. That clause was wrong.
+  `anytun` autodetects — a host with an empty connection list and no `-r` adopts
+  the sender of the first packet it sees — so nobody ever pins `-r` and `-o` by
+  hand. The real answer was better anyway: the autodetect branch is guarded on the
+  connection list being empty, so it fires once per host and never again.
+
+  State the loss in the indicative, from the code: which branch does not fire,
+  what the host does not have, which packet is dropped where. That is both true
+  and more concrete than the hypothetical it replaces.
+
 - Don't announce the next move before the scene makes it. "She did not know what
   2342 was. That was the first thing to fix." — the verdict sentence says what the
   story is about to do, and then the section heading says it again, and then the
