@@ -10,6 +10,7 @@ stories.db             sqlite index: one row per story (numeric id, requested to
 stories/{id}.md        the story content, one file per story (1.md, 2.md, … — do not read)
 scripts/story.py       CLI to create and maintain stories
 scripts/build_site.py  renders the collection into the GitHub Pages site
+scripts/draw_themes.py draws the three themes, weighted against ones already used
 themes.txt             the palette: one line per subtheme, `[theme] subtheme: gloss`
 WRITING-STYLE.md       the prose rules for the stories: the tics to avoid, and why
 src/                   upstream package sources, for fact-checking stories (read-only)
@@ -90,6 +91,7 @@ python3 scripts/story.py rename <id> <new-id>        # renumbers the row and the
 python3 scripts/story.py remove <id>                 # drops the row, keeps the file
 python3 scripts/story.py check                       # index and files agree?
 python3 scripts/build_site.py -o _site               # render the site locally
+python3 scripts/draw_themes.py                       # draw three themes for a new story
 ```
 
 `add` assigns the next unused number as the id; pass `--id` to set it explicitly, and
@@ -210,8 +212,16 @@ the user typed it, brackets and all.
 Then draw three themes at random, **before reading anything in `src/`**:
 
 ```bash
-sort -R themes.txt | tail -3
+python3 scripts/draw_themes.py
 ```
+
+The script draws three distinct lines of `themes.txt`, weighted against themes that
+earlier stories already used. Each theme weighs `1 / (1 + uses)²`, where `uses` counts
+the stories recorded under that subtheme in `stories.db`: an unused theme weighs 1, one
+used once weighs ¼, twice ⅑. Used themes stay possible, just less likely. Without the
+weighting, most draws turned up a theme already written about, because the palette is
+small next to the collection. Use the script rather than `sort -R`, and take its output
+as it comes.
 
 The order matters. Reading the sources first leaves you with one or two facts about
 the topic already in mind — the flag that looked interesting, the error string that
