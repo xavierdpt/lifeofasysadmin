@@ -156,8 +156,19 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   If the history behind it matters, the story can go and find out what it was; if it
   doesn't, the aside is a promise the story never pays.
 
+  The same goes for the folksy tag that personifies software — "one argument per
+  line, the way the init script wants them". An init script does not want
+  anything, and the clause only re-asserts that the format is mandatory, which the
+  first half already said.
+
   Fix these by deleting them, not by writing a better one. A replacement aside,
   chosen more carefully, is the next tic.
+
+  Attitude is also where unchecked facts hide. A throwaway clause does not feel
+  like an assertion, so it does not get grepped for the way the error message and
+  the exit code do — and that init script turned out to be a systemd unit, and the
+  format belonged to the launcher's config file rather than to either. Anything
+  named in an aside gets verified against `src/` on the same terms as the rest.
 
 - Don't announce the next move before the scene makes it. "She did not know what
   2342 was. That was the first thing to fix." — the verdict sentence says what the
