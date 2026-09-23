@@ -159,6 +159,16 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   Fix these by deleting them, not by writing a better one. A replacement aside,
   chosen more carefully, is the next tic.
 
+- Don't announce the next move before the scene makes it. "She did not know what
+  2342 was. That was the first thing to fix." — the verdict sentence says what the
+  story is about to do, and then the section heading says it again, and then the
+  scene does it. One is enough, and it should be the scene. The tell is a short flat
+  statement followed by a short verdict, alone in its own paragraph at a section
+  seam: a cadence borrowed to make a beat land, with no second fact in it. The verb
+  usually gives it away too, reaching for a brisk register and mis-picking — nobody
+  *fixes* not knowing what a port is, they go and find out. Cut the verdict, keep
+  the fact, and let the next paragraph start.
+
 ### Never read the existing stories
 
 **Do not open, read, `cat`, `grep`, `head`, diff, or summarise any file under
