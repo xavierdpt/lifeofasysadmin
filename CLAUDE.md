@@ -170,6 +170,15 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   format belonged to the launcher's config file rather than to either. Anything
   named in an aside gets verified against `src/` on the same terms as the rest.
 
+  When one of these comes out, cut it and stop. The repair is not a true fact in
+  the same slot: "the way the init script wants them" became "Systemd started them
+  by instance name, `anytun@pop-ams`", which is correct, checked, and does nothing
+  — no later scene touches the service manager, the instance name is visible in the
+  config path named eight words earlier, and the paragraph now ends on its dullest
+  noun. That sentence is there to spend the research that went into it. Verifying
+  something does not entitle it to a place; the sentence before it was already
+  finished.
+
 - Don't announce the next move before the scene makes it. "She did not know what
   2342 was. That was the first thing to fix." — the verdict sentence says what the
   story is about to do, and then the section heading says it again, and then the
