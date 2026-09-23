@@ -169,6 +169,21 @@ requested topic verbatim. `-t` records the theme and writes it into the stub.
   *fixes* not knowing what a port is, they go and find out. Cut the verdict, keep
   the fact, and let the next paragraph start.
 
+- Don't label a section with its function. "What the port is for" announces that an
+  explanation is coming, which turns a scene — someone asking, someone answering on
+  a call — into a lecture before it has said anything, and hands over the shape of
+  the answer ahead of the person who finds it. The test is whether the heading could
+  be pasted into any other story in the collection: "What the port is for", "The
+  investigation", "The fix", "Background" all could, so they name nothing and only
+  mark a slot. A set of them is worse than one, because setup / explanation /
+  resolution is the generic shape of a write-up rather than anything the incident
+  had, and headings are where that shape becomes visible.
+
+  A story is usually better off with fewer headings than it first wants, or none: a
+  blank line carries a scene break. Where one stays, it should name something only
+  this story has — the port number, a line of the output, the word someone
+  remembered wrong.
+
 ### Never read the existing stories
 
 **Do not open, read, `cat`, `grep`, `head`, diff, or summarise any file under
