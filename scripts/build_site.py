@@ -2,9 +2,10 @@
 """Render the story collection into a static site for GitHub Pages.
 
 The requested topic, the theme and the summary come from stories.db; the story title and the prose
-come from stories/{id}.md. Reading order is the numeric id. Topic and title stay
-separate: the index shows the story title as the link, and the topic followed by the
-theme as its subtitle, followed by the summary.
+come from stories/{id}.md. Reading order is the numeric id; the index lists the newest
+(highest id) first, PER_PAGE stories to a page. Topic and title stay separate: the index
+shows the story title as the link, and the topic followed by the theme as its subtitle,
+followed by the summary.
 """
 
 import argparse
@@ -28,6 +29,8 @@ SITE_TAGLINE = "Scenario stories from the other side of the pager."
 BASE_URL = "https://xavierdpt.github.io/lifeofasysadmin/"
 AUTHOR = {"@type": "Person", "name": "Xavier Dupont", "url": "https://xavierdpt.github.io/"}
 ISSUES_URL = "https://github.com/xavierdpt/lifeofasysadmin/issues"
+# Stories per index page. Page 1 is index.html; page n is page/n.html.
+PER_PAGE = 10
 # Shown in the footer of every page, under that page's own footer line.
 NOTE = (
     "These stories are written by an AI, checked against the actual source code, and "
@@ -184,6 +187,20 @@ footer p {
 }
 footer p.note { margin-top: .8em; font-size: .75rem; }
 .nav { margin-top: 3em; font-size: .9rem; }
+nav.pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: .4em .9em;
+  margin-top: 2em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .85rem;
+  color: var(--muted);
+}
+nav.pager a { text-decoration: none; }
+nav.pager a:hover { text-decoration: underline; }
+nav.pager .current { color: var(--fg); font-weight: 600; }
 """
 
 
@@ -244,6 +261,36 @@ def render(title, body, root, footer, url, description, og_type, jsonld, head_ti
     }
 
 
+def page_path(n):
+    """Where index page n lives, relative to the site root."""
+    return "index.html" if n == 1 else "page/%d.html" % n
+
+
+def page_url(n):
+    return BASE_URL if n == 1 else BASE_URL + page_path(n)
+
+
+def pager(n, pages, root):
+    """Newer / numbered / older links between index pages; empty for a single page."""
+    if pages == 1:
+        return ""
+
+    def href(k):
+        return root if k == 1 else root + page_path(k)
+
+    parts = []
+    if n > 1:
+        parts.append('<a href="%s" rel="prev">&larr; Newer</a>' % href(n - 1))
+    for k in range(1, pages + 1):
+        if k == n:
+            parts.append('<span class="current" aria-current="page">%d</span>' % k)
+        else:
+            parts.append('<a href="%s">%d</a>' % (href(k), k))
+    if n < pages:
+        parts.append('<a href="%s" rel="next">Older &rarr;</a>' % href(n + 1))
+    return '<nav class="pager" aria-label="Pages">\n  %s\n</nav>\n' % "\n  ".join(parts)
+
+
 def sitemap(urls):
     items = "\n".join("  <url><loc>%s</loc></url>" % html.escape(u) for u in urls)
     return (
@@ -267,6 +314,7 @@ def main():
     if os.path.isdir(out):
         shutil.rmtree(out)
     os.makedirs(os.path.join(out, "stories"))
+    os.makedirs(os.path.join(out, "page"))
 
     md = markdown.Markdown(extensions=["fenced_code", "tables", "toc", "sane_lists"])
 
@@ -306,34 +354,44 @@ def main():
             ))
         entries.append((story_id, topic, theme, title, summary))
 
-    items = "\n".join(
-        '  <li><a href="stories/%s.html">%s</a>\n'
-        '    <span class="meta"><span class="topic">%s</span>'
-        '<span class="theme">%s</span></span>%s</li>'
-        % (
-            html.escape(story_id),
-            html.escape(title),
-            html.escape(topic),
-            html.escape(theme),
-            '\n    <p class="summary">%s</p>' % inline_markdown(md, summary) if summary else "",
+    # Newest first on the index; the story ids themselves keep reading order.
+    newest = entries[::-1]
+    pages = max(1, -(-len(newest) // PER_PAGE))
+    for n in range(1, pages + 1):
+        root = "./" if n == 1 else "../"
+        items = "\n".join(
+            '  <li><a href="%sstories/%s.html">%s</a>\n'
+            '    <span class="meta"><span class="topic">%s</span>'
+            '<span class="theme">%s</span></span>%s</li>'
+            % (
+                root,
+                html.escape(story_id),
+                html.escape(title),
+                html.escape(topic),
+                html.escape(theme),
+                '\n    <p class="summary">%s</p>' % inline_markdown(md, summary) if summary else "",
+            )
+            for story_id, topic, theme, title, summary in newest[(n - 1) * PER_PAGE:n * PER_PAGE]
         )
-        for story_id, topic, theme, title, summary in entries
-    )
-    index = (
-        "<h1>%s</h1>\n<p class=\"tagline\">%s</p>\n<ol class=\"stories\">\n%s\n</ol>\n"
-        % (html.escape(SITE_TITLE), html.escape(SITE_TAGLINE), items)
-    )
-    with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
-        f.write(render(
-            SITE_TITLE, index, "./", "%d stories." % len(entries),
-            BASE_URL, SITE_TAGLINE, "website",
-            {"@type": "WebSite", "name": SITE_TITLE, "description": SITE_TAGLINE,
-             "url": BASE_URL, "author": AUTHOR},
-        ))
+        index = (
+            "<h1>%s</h1>\n<p class=\"tagline\">%s</p>\n<ol class=\"stories\">\n%s\n</ol>\n%s"
+            % (html.escape(SITE_TITLE), html.escape(SITE_TAGLINE), items, pager(n, pages, root))
+        )
+        with open(os.path.join(out, page_path(n)), "w", encoding="utf-8") as f:
+            f.write(render(
+                SITE_TITLE, index, root, "%d stories." % len(entries),
+                page_url(n), SITE_TAGLINE, "website",
+                {"@type": "WebSite", "name": SITE_TITLE, "description": SITE_TAGLINE,
+                 "url": BASE_URL, "author": AUTHOR},
+                head_title=SITE_TITLE if n == 1 else "Page %d – %s" % (n, SITE_TITLE),
+            ))
 
     # The site root's robots.txt points crawlers here; a project site cannot serve its own.
     with open(os.path.join(out, "sitemap.xml"), "w", encoding="utf-8") as f:
-        f.write(sitemap([BASE_URL] + [BASE_URL + "stories/%s.html" % e[0] for e in entries]))
+        f.write(sitemap(
+            [page_url(n) for n in range(1, pages + 1)]
+            + [BASE_URL + "stories/%s.html" % e[0] for e in entries]
+        ))
 
     with open(os.path.join(out, "style.css"), "w", encoding="utf-8") as f:
         f.write(STYLE)
