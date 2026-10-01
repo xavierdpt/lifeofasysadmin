@@ -120,3 +120,14 @@ a story.
   blank line carries a scene break. Where one stays, it should name something only
   this story has — the port number, a line of the output, the word someone
   remembered wrong.
+
+- Don't close a comparison by borrowing the unit from one side and the quantity from
+  the other. "The attestation went out Thursday afternoon, two files later than the
+  SPDX report had said it needed to be" reaches for a crisp final beat and produces
+  a sentence that doesn't parse: "later" measures time, but what actually changed
+  between the report and the attestation was a count, three license entries instead
+  of the scanner's one, not a date. It reads as punchy on a first pass and falls
+  apart the moment someone asks what it means, because the two halves were never
+  commensurable. Compare the two things in the unit they actually share — a count
+  against a count, a time against a time — or compare them directly instead of
+  building a ratio: "three license entries where the SPDX report had given one."
